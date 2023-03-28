@@ -15,32 +15,50 @@ function CalculateInterest() {
 
   React.useEffect(() => {
     if (mortgageRates.length > 0) return;
+
+    const fetchMortgageRates = async () => {
+      const url = 'https://developer.sbab.se';
+      const endpoint = `/sandbox/api/interest-rates/2.0/mortgage-rates`;
+      const requestUrl = `${url}${endpoint}`;
+
+      const response = await fetch(new URL(requestUrl));
+      const data = await response.json();
+      setMortgageRates(
+        Object.entries(data.mortgage_rates).map(([key]) => {
+          return {
+            label: getOptionLabel(
+              data.mortgage_rates[key].binding_period_in_months,
+              data.mortgage_rates[key].mortgage_rate
+            ),
+            value: data.mortgage_rates[key].mortgage_rate,
+          };
+        })
+      );
+      setIsLoading(false);
+    };
+
     fetchMortgageRates();
     setIsLoading(true);
-  }, []);
+  }, [mortgageRates]);
 
   React.useEffect(() => {
     if (mortgageRates.length === 0) return;
     if (interestRate === 0) setInterestRate(mortgageRates[0].value);
+
+    const calculateMonthlyPayment = () => {
+      if (loanSum === 0) return;
+      const monthlyPayment = Math.round(loanSum * ((interestRate * 0.01) / 12));
+      setMonthlyPayment(monthlyPayment);
+    };
+
     calculateMonthlyPayment();
   }, [loanSum, interestRate, mortgageRates]);
 
-  const fetchMortgageRates = async () => {
-    const url = 'https://developer.sbab.se';
-    const endpoint = `/sandbox/api/interest-rates/2.0/mortgage-rates`;
-    const requestUrl = `${url}${endpoint}`;
-
-    const response = await fetch(new URL(requestUrl));
-    const data = await response.json();
-    setMortgageRates(
-      Object.entries(data.mortgage_rates).map(([key]) => {
-        return {
-          label: `${data.mortgage_rates[key].binding_period_in_months} mån - ${data.mortgage_rates[key].mortgage_rate}%`,
-          value: data.mortgage_rates[key].mortgage_rate,
-        };
-      })
-    );
-    setIsLoading(false);
+  const getOptionLabel = (months, mortgageRate) => {
+    const years = Math.floor(months / 12);
+    months = months % 12;
+    if (months === 0) return `${years} år - ${mortgageRate}%`;
+    return `${months} mån - ${mortgageRate}%`;
   };
 
   const handleInputChange = () => {
@@ -51,13 +69,7 @@ function CalculateInterest() {
     setInterestRate(e.target.value);
   };
 
-  const calculateMonthlyPayment = () => {
-    if (loanSum === 0) return;
-    const monthlyPayment = Math.round(loanSum * ((interestRate * 0.01) / 12));
-    setMonthlyPayment(monthlyPayment);
-  };
-
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) return <p>Hämtar räntor från API...</p>;
 
   return (
     <>
@@ -87,10 +99,13 @@ function CalculateInterest() {
       </section>
       <section className="w-full max-w-2xl flex flex-col gap-4">
         <HeadingWithDivider label={`Din räntekostnad –⁠ ${interestRate}%`} />
-        <div className="flex flex-col items-center lg:items-start lg:justify-start lg:flex-row gap-4">
-          <img className="max-w-fit" src={Compare} alt="Percentage" />
+        <div className="flex flex-col items-center lg:items-start lg:justify-between lg:flex-row-reverse gap-4">
+          <img
+            className="max-w-fit object-cover"
+            src={Compare}
+            alt="Percentage"
+          />
           <h1 className="text-5xl">{monthlyPayment} kr/mån</h1>
-          <p>{interestRate}</p>
         </div>
       </section>
     </>
