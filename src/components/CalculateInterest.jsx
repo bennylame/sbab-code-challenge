@@ -77,11 +77,11 @@ function CalculateInterest() {
         <HeadingWithDivider label="Få fram din räntekostnad direkt" />
         <form
           className="flex flex-col gap-4"
-          onSubmit={(e) => e.preventDefault}
+          onSubmit={(e) => e.preventDefault()}
         >
           <Input
-            type="text"
             id="loan-sum"
+            type="number"
             name="loan-sum"
             placeholder="ex. 2 000 000"
             label="Önskat lånebelopp"

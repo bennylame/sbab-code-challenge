@@ -1,7 +1,7 @@
 import React from 'react';
 
 const Input = React.forwardRef(
-  ({ id, name, placeholder, label, onChange }, ref) => {
+  ({ id, type, name, placeholder, label, onChange }, ref) => {
     return (
       <div className="flex flex-col gap-1">
         {label && (
@@ -10,8 +10,8 @@ const Input = React.forwardRef(
           </label>
         )}
         <input
-          type="text"
           id={id}
+          type={type}
           name={name}
           placeholder={placeholder}
           className="border border-gray-300 lg:w-1/2 px-1"
